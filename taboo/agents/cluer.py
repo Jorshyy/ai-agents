@@ -35,7 +35,7 @@ class AICluer(Cluer):
         return result.clue
     
     async def play(self):
-        while not self.game._stop.is_set():  # type: ignore[attr-defined]
+        while not self.game.is_over():
             try:
                 clue = await self.next_clue()
             except asyncio.CancelledError:

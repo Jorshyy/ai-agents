@@ -50,6 +50,13 @@ class Game:
     def history(self) -> list[Event]:
         return list(self.events)
 
+    # Public termination helpers
+    def is_over(self) -> bool:
+        return self._stop.is_set()
+
+    async def wait_over(self) -> None:
+        await self._stop.wait()
+
     async def wait_next(self, index: int) -> int:
         async with self._cond:
             await self._cond.wait_for(lambda: len(self.events) > index)

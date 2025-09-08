@@ -62,7 +62,7 @@ class Cluer(Player[ClueEvent]):
         raise NotImplementedError
 
     async def play(self):
-        while not self.game._stop.is_set():  # type: ignore[attr-defined]
+        while not self.game.is_over():
             clue = await self.next_clue()
             await self.announce(ClueEvent(role="cluer", clue=clue))
 
@@ -89,7 +89,7 @@ class Buzzer(Player[BuzzEvent]):
     
     async def play(self):
         idx = 0
-        while not self.game._stop.is_set():  # type: ignore[attr-defined]
+        while not self.game.is_over():
             n = await self.game.wait_next(idx)
             events = self.game.events[idx:n]
             idx = n
@@ -122,10 +122,10 @@ class Guesser(Player[GuessEvent]):
             async for ev in self.game.stream(start=len(self.game.events)):
                 if ev.role == "cluer":
                     break
-                if self.game._stop.is_set():  # type: ignore[attr-defined]
+                if self.game.is_over():
                     return
 
-        while not self.game._stop.is_set():  # type: ignore[attr-defined]
+        while not self.game.is_over():
             guess = await self.next_guess()
             # Skip empty guesses
             if not guess.guess or not guess.guess.strip():
@@ -152,7 +152,7 @@ class Judge(Player[JudgeEvent]):
 
     async def play(self):
         idx = 0
-        while not self.game._stop.is_set():  # type: ignore[attr-defined]
+        while not self.game.is_over():
             n = await self.game.wait_next(idx)
             events = self.game.events[idx:n]
             idx = n
