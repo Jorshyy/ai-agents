@@ -2,6 +2,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any, Dict, List, cast
+import contextlib
 from collections import Counter
 
 from .types import Event, SystemMessage
@@ -12,14 +13,17 @@ log = logging.getLogger(__name__)
 
 
 def validate_roles(players: List[Player]):
-    counts = Counter(type(p).__name__ for p in players)
-    if counts.get("Cluer", 0) != 1:
+    n_cluer = sum(1 for p in players if isinstance(p, Cluer))
+    n_buzzer = sum(1 for p in players if isinstance(p, Buzzer))
+    n_judge = sum(1 for p in players if isinstance(p, Judge))
+    n_guesser = sum(1 for p in players if isinstance(p, Guesser))
+    if n_cluer != 1:
         raise ValueError("There must be exactly one Cluer.")
-    if counts.get("Buzzer", 0) != 1:
+    if n_buzzer != 1:
         raise ValueError("There must be exactly one Buzzer.")
-    if counts.get("Judge", 0) != 1:
+    if n_judge != 1:
         raise ValueError("There must be exactly one Judge.")
-    if counts.get("Guesser", 0) < 1:
+    if n_guesser < 1:
         raise ValueError("There must be at least one Guesser.")
 
 
@@ -32,6 +36,7 @@ class Game:
         self.events: list[Event] = []
         self._cond = asyncio.Condition()
         self._stop = asyncio.Event()
+
         self.players = players
         for p in self.players:
             p.join(self)
@@ -64,31 +69,44 @@ class Game:
             await asyncio.sleep(self.duration_sec)
             await self.publish(SystemMessage(role="system", event="timeout"))
 
-        async with asyncio.TaskGroup() as tg:
-            for p in self.players:
-                tg.create_task(p.play())
-            tg.create_task(timeout())
+        # Launch players and timeout tasks
+        player_tasks: list[asyncio.Task] = [asyncio.create_task(p.play()) for p in self.players]
+        timeout_task = asyncio.create_task(timeout())
 
+        try:
             idx = 0
             while True:
                 n = await self.wait_next(idx)
                 events = self.events[idx:n]
                 idx = n
                 for ev in events:
-                    if ev.role == "judge" and not ev.is_correct:
+                    if ev.role == "buzzer" and not ev.allowed:
+                        self._stop.set()
+                        await self.publish(SystemMessage(role="system", event="end", reason="buzzed"))
+                        raise asyncio.CancelledError()
+                    if ev.role == "judge" and ev.is_correct:
                         self._stop.set()
                         end_msg = SystemMessage(role="system", event="end", reason="correct")
                         if ev.by:
                             end_msg.winner = ev.by
                         await self.publish(end_msg)
-                        break
+                        raise asyncio.CancelledError()
                     if ev.role == "system" and ev.event == "timeout":
                         self._stop.set()
                         await self.publish(SystemMessage(role="system", event="end", reason="timeout"))
-                        break
-                else:
-                    continue
-                break
+                        raise asyncio.CancelledError()
+        except asyncio.CancelledError:
+            # Signal players to end in-flight work quickly
+            await asyncio.gather(*(p.end() for p in self.players), return_exceptions=True)
+            # Cancel tasks to unblock any waits
+            for t in player_tasks:
+                t.cancel()
+            timeout_task.cancel()
+            await asyncio.gather(*player_tasks, return_exceptions=True)
+            try:
+                await timeout_task
+            except asyncio.CancelledError:
+                pass
 
         return {"events": self.history()}
 

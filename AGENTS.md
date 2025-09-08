@@ -5,24 +5,27 @@
 - `taboo/player.py`: generic players (`Cluer`, `Guesser`, `Buzzer`, `Judge`) and strategies (`AI*`, `Human*`).
 - `taboo/types.py`: Pydantic event models (discriminated by `role`).
 - `taboo/llm/fakellm.py`: latency-simulating model used by strategies.
-- `taboo/scripts/serverless_round.py`: runs an all-agent round locally (DEBUG logs).
+- `taboo/cli.py`: Typer CLI entrypoint for running AI vs AI rounds (pretty output).
+  - If `--target` is omitted, it auto‑generates a card via DSPy (`taboo/agents/card_creator.py`).
 - `Makefile`: `sync`, `test`, `demo` targets.
 
-## Build, Test, and Development (uv)
+- ## Build, Test, and Development (uv)
 - Sync env: `uv sync` (uses `.python-version` and `uv.lock`).
-- Run demo (agents only): `make demo`.
+- Run demo (agents only): `uv run python -m taboo play --target apple --guessers 3 --duration 30`.
 - Run tests:
   - Ephemeral: `uvx pytest -q`.
   - Dev dep: `uv add --dev pytest` then `uv run pytest -q`.
 
-## Serverless Demo
-- Run a full agent-only round: `make demo`.
+## Serverless Demo (Typer CLI)
+- Run a full agent-only round:
+  - Provide a target: `uv run python -m taboo play --target apple --guessers 3 --duration 30`
+  - Or auto-generate a full card: `uv run python -m taboo play`
 - Uses a single shared history (`taboo/game.py`) that all agents read, appending events like:
   - `{ "role": "cluer", "clue": "potato" }`
   - `{ "role": "buzzer", "clue": "potato", "allowed": true }`
   - `{ "role": "guesser", "player_id": "g1", "guess": "french fry" }`
   - `{ "role": "judge", "guess": "french fry", "is_correct": false }`
-- Env overrides: `TABOO_TARGET`, `TABOO_WORDS` (JSON list), `TABOO_DURATION`, `TABOO_GUESSERS`, `TABOO_CLUE_PACE`.
+  - The CLI prefers `--target ...` and generates taboo words via DSPy. If `--target` is omitted, it generates both target and taboo words.
 
 ## Coding Style & Naming Conventions
 - Python 3.11+, 4-space indentation, PEP 8 + type hints.

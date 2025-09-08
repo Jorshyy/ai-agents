@@ -1,3 +1,8 @@
+"""
+Event types for messaging and game history
+"""
+
+
 from __future__ import annotations
 from typing import Literal, Union, Optional, Annotated, List
 from pydantic import BaseModel, Field
@@ -5,6 +10,10 @@ from pydantic import BaseModel, Field
 
 class BaseEvent(BaseModel):
     role: str
+
+    model_config = {
+        "extra": "forbid"
+    }
 
 
 class ClueEvent(BaseEvent):
@@ -36,7 +45,7 @@ class JudgeEvent(BaseEvent):
 class SystemMessage(BaseEvent):
     role: Literal["system"]
     event: Literal["timeout", "end"]
-    reason: Optional[Literal["correct", "timeout"]] = None
+    reason: Optional[Literal["correct", "timeout", "buzzed"]] = None
     winner: Optional[str] = None
 
 

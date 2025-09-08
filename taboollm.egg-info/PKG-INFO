@@ -1,3 +1,12 @@
+Metadata-Version: 2.4
+Name: taboollm
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: dspy>=3.0.3
+Requires-Dist: pydantic>=2.7
+
 # Simple Taboo (Single-History Agents)
 
 This repository implements a minimal Taboo-style game using a single shared, append-only history. All agents (cluer, buzzer, guessers, judge) listen to that one history and append their own events. This mirrors a real table‑top game and keeps the system easy to reason about.
@@ -13,11 +22,11 @@ Quickstart (uv)
 # install project deps (uses .python-version and uv.lock)
 uv sync
 
-# run a full agent-only round (Typer CLI)
-uv run python -m taboo play --target apple --guessers 3 --duration 30
+# run a full agent-only round
+make demo
 
-# or auto‑generate a full card via DSPy (omit --target)
-uv run python -m taboo play --duration 30
+# optional: tune via env vars
+TABOO_TARGET=apple TABOO_WORDS='["fruit","red","iphone","mac","tree"]' TABOO_DURATION=30 TABOO_GUESSERS=3 make demo
 ```
 
 How it works
@@ -30,7 +39,7 @@ How it works
   - `{ "role": "buzzer", "clue": "...", "allowed": true|false }`
   - `{ "role": "guesser", "player_id": "g1", "guess": "..." }`
   - `{ "role": "judge", "guess": "...", "is_correct": true|false }`
-- The CLI constructs AI players, runs a round locally until correct/timeout, and prints a readable transcript. If `--target` is omitted, it auto‑generates a game card via DSPy (`taboo/agents/card_creator.py`).
+The CLI constructs AI players, runs a round locally until correct/timeout, and prints a readable transcript.
 
 Next steps
 - Swap `FakeLLM` with real models (DSPy or API-backed) behind the same interface.

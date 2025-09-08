@@ -7,4 +7,5 @@ requires-python = ">=3.11"
 dependencies = [
     "dspy>=3.0.3",
     "pydantic>=2.7",
+    "typer>=0.12",
 ]

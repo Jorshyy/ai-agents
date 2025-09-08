@@ -7,4 +7,4 @@ sync:
 	uv sync
 
 demo:
-	uv run python -m taboo.scripts.serverless_round
+	uv run python -m taboo play --target apple --guessers 3 --duration 30
