@@ -50,19 +50,11 @@ class Player(Generic[EventT]):
         self._game = game
         return self
 
-    # ---- Task helpers for subclasses ----
-    def _track(self, task: asyncio.Task[Any]) -> asyncio.Task[Any]:
-        self._pending.add(task)
-        task.add_done_callback(self._pending.discard)
-        return task
-
-    def create_task(self, coro: asyncio.coroutines.Coroutine[Any, Any, Any]) -> asyncio.Task[Any]:
-        """Create and track a cancellable task owned by this player."""
-        return self._track(asyncio.create_task(coro))
-
+    # ---- Minimal helper for subclasses ----
     async def await_cancellable(self, coro: asyncio.coroutines.Coroutine[Any, Any, Any]) -> Any:
         """Run a coroutine as a tracked task and await its result safely."""
-        task = self.create_task(coro)
+        task = asyncio.create_task(coro)
+        self._pending.add(task)
         try:
             return await task
         finally:
