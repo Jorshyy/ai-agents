@@ -1,12 +1,12 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `taboo/game.py`: single `Game` (append-only history, runs players).
-- `taboo/player.py`: generic players (`Cluer`, `Guesser`, `Buzzer`, `Judge`) and strategies (`AI*`, `Human*`).
-- `taboo/types.py`: Pydantic event models (discriminated by `role`).
-- `taboo/llm/fakellm.py`: latency-simulating model used by strategies.
-- `taboo/cli.py`: Typer CLI entrypoint for running AI vs AI rounds (pretty output).
-  - If `--target` is omitted, it auto‑generates a card via DSPy (`taboo/agents/card_creator.py`).
+- `taboo/game.py`: single `Game` (append-only history, `is_over()` / `finished()`, end-of-round rules).
+- `taboo/player.py`: base players (`Cluer`, `Guesser`, `Buzzer`, `Judge`) with `announce(event)` and cancellable `run(coro)`.
+- `taboo/agents/`: AI implementations (DSPy) and card generation.
+  - `cluer.AICluer`, `guesser.AIGuesser`, `judge.AIJudge`, `card_creator.TabooCard`.
+- `taboo/types.py`: Pydantic event models (discriminated by `role`, extra-forbid).
+- `taboo/cli.py`: Typer CLI for running AI vs AI rounds (pretty output).
 - `Makefile`: `sync`, `test`, `demo` targets.
 
 - ## Build, Test, and Development (uv)
@@ -16,11 +16,11 @@
   - Ephemeral: `uvx pytest -q`.
   - Dev dep: `uv add --dev pytest` then `uv run pytest -q`.
 
-## Serverless Demo (Typer CLI)
+## Demo (Typer CLI)
 - Run a full agent-only round:
-  - Provide a target: `uv run python -m taboo play --target apple --guessers 3 --duration 30`
+  - Provide a target: `uv run python -m taboo play --target apple --guessers 3 --duration 30 --name g1 --name g2 --name g3`
   - Or auto-generate a full card: `uv run python -m taboo play`
-- Uses a single shared history (`taboo/game.py`) that all agents read, appending events like:
+- Uses a single shared history that all players read, appending events like:
   - `{ "role": "cluer", "clue": "potato" }`
   - `{ "role": "buzzer", "clue": "potato", "allowed": true }`
   - `{ "role": "guesser", "player_id": "g1", "guess": "french fry" }`
@@ -34,7 +34,7 @@
 
 ## Testing Guidelines
 - Framework: `pytest` (add as a dev dep when tests exist).
-- Suggested focus: player strategies (logic) and game end conditions.
+- Suggested focus: player behavior and game end conditions (buzzed/correct/timeout).
 - Run: `uvx pytest -q` or `uv run pytest -q`.
 
 ## Commit & Pull Request Guidelines
@@ -48,4 +48,4 @@
 - Use `pyproject.toml` + `uv.lock` as the source of truth; prefer `uv add/remove` over editing `requirements.txt`.
 
 ## Logging
-- The demo configures DEBUG logging; edit the script to change level/format.
+- The CLI sets WARNING level and pretty-prints the transcript; internal DEBUG logs remain available for debugging.
