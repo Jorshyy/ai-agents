@@ -26,7 +26,7 @@ def _format_event(ev: Event) -> str:
     if r == "cluer":
         return f"[cluer] {ev.clue}"
     if r == "buzzer":
-        return f"[buzzer] {'ok' if ev.allowed else 'BUZZED'}" + (f" (reason: {ev.reason})" if ev.reason else "")
+        return f"[buzzer] {'ok' if ev.violates_taboo else 'BUZZED'}" + (f" (reason: {ev.reason})" if ev.reason else "")
     if r == "guesser":
         who = ev.player_id
         base = f"[guesser {who}] {ev.guess}"

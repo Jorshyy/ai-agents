@@ -86,7 +86,7 @@ class Game:
                 events = self.events[idx:n]
                 idx = n
                 for ev in events:
-                    if ev.role == "buzzer" and not ev.allowed:
+                    if ev.role == "buzzer" and not ev.violates_taboo:
                         self._stop.set()
                         await self.publish(SystemMessage(role="system", event="end", reason="buzzed"))
                         raise asyncio.CancelledError()

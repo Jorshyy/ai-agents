@@ -24,7 +24,6 @@ class ClueEvent(BaseEvent):
 class BuzzEvent(BaseEvent):
     role: Literal["buzzer"]
     clue: str
-    allowed: bool
     reason: Optional[str] = None
 
 

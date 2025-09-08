@@ -105,9 +105,10 @@ class Buzzer(Player[BuzzEvent], ABC):
             for ev in events:
                 if ev.role == "cluer":
                     clue = ev.clue
+                    # only buzz on violation
                     reason = await self._violates(clue)
-                    allowed = reason is None
-                    await self.announce(BuzzEvent(role="buzzer", clue=clue, allowed=allowed, reason=reason))
+                    if reason:
+                        await self.announce(BuzzEvent(role="buzzer", clue=clue, violates_taboo=True, reason=reason))
 
 
 class Guess(BaseModel):
