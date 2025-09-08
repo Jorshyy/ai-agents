@@ -1,9 +1,7 @@
 from __future__ import annotations
 import asyncio
 import logging
-from typing import Any, Dict, List, cast
-import contextlib
-from collections import Counter
+from typing import Any, Dict, List
 
 from .types import Event, SystemMessage
 from .player import Player, Cluer, Buzzer, Guesser, Judge

@@ -1,4 +1,5 @@
-import asyncio, random
+import asyncio
+import random
 from typing import List, Tuple
 
 class FakeLLM:

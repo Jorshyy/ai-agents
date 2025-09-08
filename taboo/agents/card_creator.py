@@ -40,7 +40,8 @@ class CreateTabooWords(dspy.Signature):
     be the most obvious clues to the target word, so that the cluer has to be creative.
     """
     target: str = dspy.InputField(description="The target word for the game")
-    taboo_words: list[str] = dspy.OutputField(description="A list of taboo words that cannot be used in clues for the target word") 
+    taboo_words: list[str] = dspy.OutputField(description="A list of taboo words that cannot be used in clues for the target word")
+
 
 
 create_taboo_words = dspy.ChainOfThought(CreateTabooWords)

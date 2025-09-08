@@ -1,11 +1,11 @@
 """
-The different types of players in a Taboo game.
+Abstract base classes different types of players in a Taboo game.
 """
 
 from __future__ import annotations
+from abc import ABC
 import asyncio
-import re
-from typing import TYPE_CHECKING, Generic, TypeVar, Optional, Tuple, Any
+from typing import TYPE_CHECKING, Generic, TypeVar, Optional, Any, Coroutine
 
 if TYPE_CHECKING:
     from taboo.game import Game
@@ -18,7 +18,7 @@ from .types import ClueEvent, BuzzEvent, GuessEvent, JudgeEvent, SystemMessage
 EventT = TypeVar('EventT', bound=ClueEvent | BuzzEvent | GuessEvent | JudgeEvent | SystemMessage)
 
 
-class Player(Generic[EventT]):
+class Player(Generic[EventT], ABC):
     def __init__(self):
         self._game: Optional['Game'] = None
         self.id = id(self)
@@ -52,7 +52,7 @@ class Player(Generic[EventT]):
         return self
 
     # ---- Minimal helper for subclasses ----
-    async def run(self, coro: asyncio.coroutines.Coroutine[Any, Any, Any]) -> Any:
+    async def run(self, coro: Coroutine[Any, Any, Any]) -> Any:
         """Run a coroutine as a tracked task and await its result.
 
         Any in-flight run(...) calls are cancelled and awaited when end() is called.
@@ -74,7 +74,7 @@ class Player(Generic[EventT]):
 
 # ---- Players ----
 
-class Cluer(Player[ClueEvent]):
+class Cluer(Player[ClueEvent], ABC):
     """
     Player that gives clues to help guessers guess the target word.
     """
@@ -89,21 +89,7 @@ class Cluer(Player[ClueEvent]):
             clue = await self.next_clue()
             await self.announce(ClueEvent(role="cluer", clue=clue))
 
-class HumanCluer(Cluer):
-    """
-    Human (?) cluer that can submit clues to the game via submit().
-    """
-    def __init__(self):
-        super().__init__()
-        self._q: asyncio.Queue[str] = asyncio.Queue()
-
-    def submit(self, clue: str):
-        self._q.put_nowait(clue)
-
-    async def next_clue(self) -> str:
-        return await self._q.get()
-
-class Buzzer(Player[BuzzEvent]):
+class Buzzer(Player[BuzzEvent], ABC):
     """
     Player that buzzes if a clue violates the taboo words.
     """
@@ -128,7 +114,7 @@ class Guess(BaseModel):
     guess: str
     rationale: str | None = None
 
-class Guesser(Player[GuessEvent]):
+class Guesser(Player[GuessEvent], ABC):
     """
     Player that makes guesses about the target word.
     """
@@ -155,23 +141,13 @@ class Guesser(Player[GuessEvent]):
                 continue
             await self.announce(GuessEvent(role="guesser", player_id=self.player_id, guess=guess.guess, rationale=guess.rationale))
 
-class HumanGuesser(Guesser):
-    def __init__(self, player_id: str):
-        super().__init__(player_id)
-        self._q: asyncio.Queue[Guess] = asyncio.Queue()
 
-    def submit(self, guess: str, rationale: Optional[str] = None):
-        self._q.put_nowait(Guess(guess=guess, rationale=rationale))
-
-    async def next_guess(self) -> Guess:
-        return await self._q.get()
-
-class Judge(Player[JudgeEvent]):
+class Judge(Player[JudgeEvent], ABC):
     """
     Player that judges whether guesses are correct.
     """
     async def check_guess(self, guess: str) -> bool:
-        return guess.strip().lower() == self.game.target.lower()
+        raise NotImplementedError
 
     async def play(self):
         idx = 0
