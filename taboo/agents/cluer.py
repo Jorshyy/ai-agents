@@ -21,11 +21,12 @@ class AICluer(Cluer):
 
     async def next_clue(self):
         with dspy.context(lm=self.lm):
-            result = await self.run(self.generate_clue.aforward(
+            coro = self.generate_clue.aforward(
                 target=self.game.target,  # type: ignore[attr-defined]
                 taboo_words=self.game.taboo_words,  # type: ignore[attr-defined]
                 history=self.game.history(),  # type: ignore[attr-defined]
-                lm=self.lm))
+                lm=self.lm)
+            result = await self.run(coro)
         return result.clue
     
     async def play(self):
