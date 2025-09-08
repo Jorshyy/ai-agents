@@ -22,6 +22,7 @@ class Player(Generic[EventT]):
     def __init__(self):
         self._game: Optional['Game'] = None
         self.id = id(self)
+        # Pending tasks so we can cancel them at game over
         self._pending: set[asyncio.Task[Any]] = set()
 
     async def announce(self, event: EventT):
@@ -37,7 +38,7 @@ class Player(Generic[EventT]):
         if not self._pending:
             return
         # Cancel all tracked tasks
-        for t in list(self._pending):
+        for t in self._pending:
             if not t.done():
                 t.cancel()
         # Await completion, suppressing cancellation
@@ -51,8 +52,11 @@ class Player(Generic[EventT]):
         return self
 
     # ---- Minimal helper for subclasses ----
-    async def await_cancellable(self, coro: asyncio.coroutines.Coroutine[Any, Any, Any]) -> Any:
-        """Run a coroutine as a tracked task and await its result safely."""
+    async def run(self, coro: asyncio.coroutines.Coroutine[Any, Any, Any]) -> Any:
+        """Run a coroutine as a tracked task and await its result.
+
+        Any in-flight run(...) calls are cancelled and awaited when end() is called.
+        """
         task = asyncio.create_task(coro)
         self._pending.add(task)
         try:

@@ -26,7 +26,7 @@ class AIGuesser(Guesser):
 
     async def next_guess(self) -> Guess:
         with dspy.context(lm=self.lm):
-            result = await self.await_cancellable(self.guess_fn.aforward(
+            result = await self.run(self.guess_fn.aforward(
                 history=self.game.history(),  # type: ignore[attr-defined]
                 player_id=self.player_id,
                 player_personality=self.player_personality
