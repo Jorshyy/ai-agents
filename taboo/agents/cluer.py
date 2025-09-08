@@ -18,20 +18,14 @@ class AICluer(Cluer):
         super().__init__()
         self.lm = dspy.LM(model=model, max_tokens=20_000, temperature=1.0)
         self.generate_clue = dspy.Predict(GenerateClue)
-        self._pending: asyncio.Task | None = None
 
     async def next_clue(self):
         with dspy.context(lm=self.lm):
-            task = asyncio.create_task(self.generate_clue.aforward(
+            result = await self.await_cancellable(self.generate_clue.aforward(
                 target=self.game.target,  # type: ignore[attr-defined]
                 taboo_words=self.game.taboo_words,  # type: ignore[attr-defined]
                 history=self.game.history(),  # type: ignore[attr-defined]
                 lm=self.lm))
-            self._pending = task
-            try:
-                result = await task
-            finally:
-                self._pending = None
         return result.clue
     
     async def play(self):
@@ -42,10 +36,4 @@ class AICluer(Cluer):
                 return
             await self.announce(ClueEvent(role="cluer", clue=clue))
 
-    async def end(self):
-        if self._pending and not self._pending.done():
-            self._pending.cancel()
-            try:
-                await self._pending
-            except asyncio.CancelledError:
-                pass
+    # end() is inherited from Player and will cancel/await tracked tasks

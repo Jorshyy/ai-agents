@@ -5,7 +5,7 @@ The different types of players in a Taboo game.
 from __future__ import annotations
 import asyncio
 import re
-from typing import TYPE_CHECKING, Generic, TypeVar, Optional, Tuple
+from typing import TYPE_CHECKING, Generic, TypeVar, Optional, Tuple, Any
 
 if TYPE_CHECKING:
     from taboo.game import Game
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 from pydantic import BaseModel
 
 from .types import ClueEvent, BuzzEvent, GuessEvent, JudgeEvent, SystemMessage
-from .llm.fakellm import FakeLLM
 
 
 EventT = TypeVar('EventT', bound=ClueEvent | BuzzEvent | GuessEvent | JudgeEvent | SystemMessage)
@@ -23,6 +22,7 @@ class Player(Generic[EventT]):
     def __init__(self):
         self._game: Optional['Game'] = None
         self.id = id(self)
+        self._pending: set[asyncio.Task[Any]] = set()
 
     async def announce(self, event: EventT):
         """Announce an event (e.g. a clue, a guess) to all the other players"""
@@ -33,13 +33,40 @@ class Player(Generic[EventT]):
         raise NotImplementedError
 
     async def end(self):
-        """Optional: override to cancel in-flight work (e.g., LLM calls)."""
+        """Cancel and await any in-flight work started via this base class."""
+        if not self._pending:
+            return
+        # Cancel all tracked tasks
+        for t in list(self._pending):
+            if not t.done():
+                t.cancel()
+        # Await completion, suppressing cancellation
+        done, pending = await asyncio.wait(self._pending, return_when=asyncio.ALL_COMPLETED)
+        self._pending.clear()
         return None
 
     def join(self, game: 'Game') -> Player[EventT]:
         """Associate this player with a game, must be called before play()"""
         self._game = game
         return self
+
+    # ---- Task helpers for subclasses ----
+    def _track(self, task: asyncio.Task[Any]) -> asyncio.Task[Any]:
+        self._pending.add(task)
+        task.add_done_callback(self._pending.discard)
+        return task
+
+    def create_task(self, coro: asyncio.coroutines.Coroutine[Any, Any, Any]) -> asyncio.Task[Any]:
+        """Create and track a cancellable task owned by this player."""
+        return self._track(asyncio.create_task(coro))
+
+    async def await_cancellable(self, coro: asyncio.coroutines.Coroutine[Any, Any, Any]) -> Any:
+        """Run a coroutine as a tracked task and await its result safely."""
+        task = self.create_task(coro)
+        try:
+            return await task
+        finally:
+            self._pending.discard(task)
 
     @property
     def game(self) -> 'Game':

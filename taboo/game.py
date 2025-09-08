@@ -54,7 +54,8 @@ class Game:
     def is_over(self) -> bool:
         return self._stop.is_set()
 
-    async def wait_over(self) -> None:
+    # Await until the game is finished.
+    async def finished(self) -> None:
         await self._stop.wait()
 
     async def wait_next(self, index: int) -> int:

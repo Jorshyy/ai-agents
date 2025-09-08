@@ -23,26 +23,13 @@ class AIGuesser(Guesser):
         self.player_personality = player_personality
         self.lm = dspy.LM(model=model, max_tokens=20_000, temperature=1.0)
         self.guess_fn = dspy.Predict(GuessWord)
-        self._pending: asyncio.Task | None = None
 
     async def next_guess(self) -> Guess:
         with dspy.context(lm=self.lm):
-            task = asyncio.create_task(self.guess_fn.aforward(
+            result = await self.await_cancellable(self.guess_fn.aforward(
                 history=self.game.history(),  # type: ignore[attr-defined]
                 player_id=self.player_id,
                 player_personality=self.player_personality
             ))
-            self._pending = task
-            try:
-                result = await task
-            finally:
-                self._pending = None
         return Guess(guess=result.guess, rationale=result.rationale)
-
-    async def end(self):
-        if self._pending and not self._pending.done():
-            self._pending.cancel()
-            try:
-                await self._pending
-            except asyncio.CancelledError:
-                pass
+    # end() inherited from Player handles pending task cancellation
