@@ -1,2 +1,0 @@
-dspy>=3.0.3
-pydantic>=2.7
