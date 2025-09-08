@@ -1,0 +1,33 @@
+# Byte-compiled / cached / C extensions
+__pycache__/
+*.py[cod]
+*.so
+
+# Environments
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Build/packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+
+# Editors/OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local overrides
+*.local
+*.secret
+
