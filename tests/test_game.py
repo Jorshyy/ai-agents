@@ -6,7 +6,20 @@ from taboo.player import Cluer, Guesser, Buzzer, Judge, Guess
 from taboo.types import ClueEvent, GuessEvent, JudgeEvent, BuzzEvent
 
 class FakeCluer(Cluer):
+    def __init__(self):
+        super().__init__()
+        self._sent = False
+
     async def next_clue(self) -> str:
+        # Let other tasks run first so we don't flood the loop.
+        await asyncio.sleep(0)
+
+        if self._sent:
+            # After the first clue, park this task until the game ends.
+            await asyncio.sleep(3600)
+            return "Aura"
+
+        self._sent = True
         return "Aura"
 
 class FakeBuzzer(Buzzer):
@@ -21,12 +34,15 @@ class FakeGuesser(Guesser):
         super().__init__("g1")
         self._guess = guess
         self._used = False
+
     async def next_guess(self) -> Guess:
         if self._used or not self._guess:
-            await asyncio.sleep(3600)  # Game.play() will cancel when round ends
+            await asyncio.sleep(3600)
             return Guess(guess="")
         self._used = True
+        await asyncio.sleep(0)  # tiny yield for fairness
         return Guess(guess=self._guess)
+
 
 class FakeJudge(Judge):
     def __init__(self, correct=False):
