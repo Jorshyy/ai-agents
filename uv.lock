@@ -1779,6 +1779,13 @@ test = [
 dev = [
     { name = "ruff" },
 ]
+tool = [
+    { name = "pydantic" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1795,6 +1802,13 @@ provides-extras = ["test"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = ">=0.12.12" }]
+tool = [
+    { name = "pydantic", specifier = ">=2.7" },
+    { name = "pytest", specifier = ">=8.3" },
+    { name = "pytest-asyncio", specifier = ">=0.23" },
+    { name = "pytest-cov", specifier = ">=5.0" },
+    { name = "pytest-mock", specifier = ">=3.14" },
+]
 
 [[package]]
 name = "tenacity"
