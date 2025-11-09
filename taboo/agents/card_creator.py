@@ -3,6 +3,13 @@ from __future__ import annotations
 from pydantic import BaseModel
 import dspy
 
+class CardGenerationError(Exception):
+    """Raised when DSPy or LLM fails or returns malformed output."""
+    pass
+
+class InvalidTabooCardError(Exception):
+    """Raised when taboo card data is invalid or contains duplicates."""
+    pass
 
 class CreateCard(dspy.Signature):
     """
@@ -55,12 +62,23 @@ class TabooCard(BaseModel):
 
     @staticmethod
     def generate() -> TabooCard:
-        with dspy.context(lm=lm):
-            result = create_card()
+        try:
+            with dspy.context(lm=lm):
+                result = create_card()
+                if not result.target or not result.taboo_words:
+                    raise CardGenerationError("DSPy returned malformed card data.")
+        except Exception as e:
+            raise CardGenerationError(f"Error generating taboo card: {str(e)}")
+        
         return TabooCard(target=result.target, taboo_words=result.taboo_words)
     
     @staticmethod
     def from_target(target: str) -> TabooCard:
-        with dspy.context(lm=lm):
-            result = create_taboo_words(target=target)
+        try:
+            with dspy.context(lm=lm):
+                result = create_taboo_words(target=target)
+                if not result.taboo_words:
+                    raise InvalidTabooCardError(f"Invalid taboo words generated for target: {target}.")
+        except Exception as e:
+            raise InvalidTabooCardError(f"Error generating taboo words for target {target}: {str(e)}")
         return TabooCard(target=target, taboo_words=result.taboo_words)
