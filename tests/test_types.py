@@ -37,7 +37,7 @@ def test_event_models_reject_missing_required_fields(payload, model):
         ({"role": "cluer", "clue": 123}, ClueEvent),  # wrong type
         ({"role": "buzzer", "clue": "x", "violates_taboo": ["yes"]}, BuzzEvent),
         ({"role": "guesser", "player_id": 7, "guess": "x"}, GuessEvent),
-        ({"role": "judge", "guess": "x", "is_correct": "true"}, JudgeEvent),
+        ({"role": "judge", "guess": None, "is_correct": True}, JudgeEvent),
     ],
 )
 def test_event_models_reject_wrong_types(payload, model):

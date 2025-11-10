@@ -52,12 +52,13 @@ async def test_player_run_cancels_when_game_over(mocker, fake_game):
     p = DummyGuesser().join(fake_game)
     async def long_task():
         await asyncio.sleep(999)
-    cancel_spy = mocker.spy(asyncio.Task, "cancel")
+    
     task = asyncio.create_task(p.run(long_task()))
-    await asyncio.sleep(0)       
-    await p.end()          
     await asyncio.sleep(0)
-    assert cancel_spy.call_count >= 1
+    await p.end()
+    await asyncio.sleep(0)
+    assert task.cancelled() or (task.done() and isinstance(task.exception(), asyncio.CancelledError))
+
     fake_game.end("timeout")
     assert fake_game.is_over()
 
