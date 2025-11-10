@@ -1,8 +1,8 @@
-# tests/test_types.py
 import pytest
 from pydantic import ValidationError
 
 from taboo.types import ClueEvent, BuzzEvent, GuessEvent, JudgeEvent
+
 
 @pytest.mark.parametrize(
     "payload, model",
@@ -15,8 +15,9 @@ from taboo.types import ClueEvent, BuzzEvent, GuessEvent, JudgeEvent
 )
 def test_event_models_accept_valid_payloads(payload, model):
     obj = model(**payload)
-    for k, v in payload.items():
-        assert getattr(obj, k) == v
+    for key, value in payload.items():
+        assert getattr(obj, key) == value
+
 
 @pytest.mark.parametrize(
     "payload, model",
@@ -31,10 +32,11 @@ def test_event_models_reject_missing_required_fields(payload, model):
     with pytest.raises(ValidationError):
         model(**payload)
 
+
 @pytest.mark.parametrize(
     "payload, model",
     [
-        ({"role": "cluer", "clue": 123}, ClueEvent),  # wrong type
+        ({"role": "cluer", "clue": 123}, ClueEvent),  # wrong type for clue
         ({"role": "buzzer", "clue": "x", "violates_taboo": ["yes"]}, BuzzEvent),
         ({"role": "guesser", "player_id": 7, "guess": "x"}, GuessEvent),
         ({"role": "judge", "guess": None, "is_correct": True}, JudgeEvent),
