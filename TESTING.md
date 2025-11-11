@@ -41,5 +41,21 @@ uv run pytest
 
   
 ### Test Coverage
-- **Functionality**: We test for correct and incorrect guesses in `judge.py` and valid clue generation in `cluer.py`.
-- **Edge Cases**: Incorrect, empty, or invalid clues and guesses.
+```
+Name                           Stmts   Miss  Cover   Missing
+------------------------------------------------------------
+taboo/__main__.py                  8      8     0%   1-11
+taboo/agents/__init__.py           5      0   100%
+taboo/agents/buzzer.py            20     10    50%   20-23, 26-33
+taboo/agents/card_creator.py      39     16    59%   65-73, 77-84
+taboo/agents/cluer.py             26      6    77%   33-38
+taboo/agents/guesser.py           19      8    58%   21-24, 27-34
+taboo/agents/judge.py             20      1    95%   26
+taboo/cli.py                      67     67     0%   1-101
+taboo/game.py                     97      7    93%   19, 21, 23, 25, 57, 121-122
+taboo/human.py                    19     19     0%   4-33
+taboo/player.py                   99      9    91%   34, 70, 85, 97, 127, 135-136, 142, 151
+taboo/types.py                    31      0   100%
+------------------------------------------------------------
+TOTAL                            450    151    66%
+```
