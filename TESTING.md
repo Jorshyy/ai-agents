@@ -1,5 +1,35 @@
 # Testing Overview
 
+
+## How to run tests
+```
+uv venv
+source .venv/bin/activate
+uv pip install .
+uv pip install --group tool
+uv run pytest
+```
+
+
+## Created/Modified Files
+
+### `test_cluer.py`
+  
+### `test_judge.py`
+
+### `test_game.py`
+
+### `test_player.py`
+
+### `test_types.py`
+
+### `card_creator.py`
+
+### `game.py`
+
+### `types.py`
+
+
 ## Custom Exceptions
 
 - **CardGenerationError**: Raised when DSPy or LLM fails to generate a valid taboo card.
@@ -8,15 +38,7 @@
 - **InvalidTabooCardError**: Raised when taboo words are invalid or duplicated.
   - Example: If DSPy generates taboo words that are too similar to the target or invalid.
 
-## Tests
 
-### Test for `cluer.py`:
-- **Purpose**: Mock the LLM to generate clues and verify that they do not use taboo words.
-- **Tools Used**: `pytest`, `pytest-mock`
-  
-### Test for `judge.py`:
-- **Purpose**: Test the `check_guess()` method using parameterized test cases.
-- **Tools Used**: `pytest.mark.parametrize`, `pytest-mock`
   
 ### Test Coverage
 - **Functionality**: We test for correct and incorrect guesses in `judge.py` and valid clue generation in `cluer.py`.
