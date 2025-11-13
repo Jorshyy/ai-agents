@@ -24,6 +24,7 @@ class ClueEvent(BaseEvent):
 class BuzzEvent(BaseEvent):
     role: Literal["buzzer"]
     clue: str
+    violates_taboo: bool = False
     reason: Optional[str] = None
 
 
